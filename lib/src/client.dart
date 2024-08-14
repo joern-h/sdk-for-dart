@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'enums.dart';
 import 'client_stub.dart'
     if (dart.library.html) 'client_browser.dart'
@@ -84,5 +86,15 @@ abstract class Client {
     Map<String, String> headers = const {},
     Map<String, dynamic> params = const {},
     ResponseType? responseType,
+  });
+
+  /// Send the API request.
+  Future<int> downloadChunked(
+    HttpMethod method, {
+    String path = '',
+    Map<String, String> headers = const {},
+    Map<String, dynamic> params = const {},
+    ResponseType? responseType,
+    required Function(Uint8List) downloadProgress,
   });
 }

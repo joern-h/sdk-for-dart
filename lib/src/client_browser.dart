@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http/browser_client.dart';
 import 'client_mixin.dart';
@@ -8,6 +9,7 @@ import 'client_base.dart';
 import 'response.dart';
 import 'input_file.dart';
 import 'upload_progress.dart';
+import 'package:async/async.dart';
 
 ClientBase createClient({
   required String endPoint,
@@ -206,6 +208,43 @@ class ClientBrowser extends ClientBase with ClientMixin {
       res = await toResponse(streamedResponse);
 
       return prepareResponse(res, responseType: responseType);
+    } catch (e) {
+      if (e is AppwriteException) {
+        rethrow;
+      }
+      throw AppwriteException(e.toString());
+    }
+  }
+
+  Future<int> downloadChunked(
+    HttpMethod method, {
+    String path = '',
+    Map<String, String> headers = const {},
+    Map<String, dynamic> params = const {},
+    ResponseType? responseType,
+    required Function(Uint8List) downloadProgress,
+  }) async {
+    http.BaseRequest request = prepareRequest(
+      method,
+      uri: Uri.parse(_endPoint + path),
+      headers: {..._headers!, ...headers},
+      params: params,
+    );
+    try {
+      final streamedResponse = await _httpClient.send(request);
+      final reader = ChunkedStreamReader(await streamedResponse.stream);
+
+      try {
+        int chunkSize = 32 * 1024;
+        Uint8List buffer;
+        do {
+          buffer = await reader.readBytes(chunkSize);
+          downloadProgress(buffer);
+        } while (buffer.length == chunkSize);
+      } finally {
+        reader.cancel();
+      }
+      return streamedResponse.statusCode;
     } catch (e) {
       if (e is AppwriteException) {
         rethrow;
