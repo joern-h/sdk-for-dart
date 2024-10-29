@@ -314,6 +314,25 @@ class Storage extends Service {
     return res.data;
   }
 
+  /// Download file
+  ///
+  ///
+  Future<int> downloadFile(
+      {required String bucketId, required String fileId, required Function(Uint8List) downloadProgress}) async {
+    final String apiPath = '/storage/buckets/{bucketId}/files/{fileId}/download'
+        .replaceAll('{bucketId}', bucketId)
+        .replaceAll('{fileId}', fileId);
+
+    final Map<String, dynamic> params = {
+      'project': client.config['project'],
+      'session': client.config['session'],
+    };
+
+    final res = await client.downloadChunked(HttpMethod.get,
+        path: apiPath, params: params, responseType: ResponseType.bytes, downloadProgress: downloadProgress);
+    return res;
+  }
+
   /// Get file preview
   ///
   /// Get a file preview image. Currently, this method supports preview for image

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'response.dart';
 import 'client.dart';
 import 'enums.dart';
@@ -41,5 +43,15 @@ abstract class ClientBase implements Client {
     Map<String, String> headers = const {},
     Map<String, dynamic> params = const {},
     ResponseType? responseType,
+  });
+
+  @override
+  Future<int> downloadChunked(
+    HttpMethod method, {
+    String path = '',
+    Map<String, String> headers = const {},
+    Map<String, dynamic> params = const {},
+    ResponseType? responseType,
+    required Function(Uint8List) downloadProgress,
   });
 }
